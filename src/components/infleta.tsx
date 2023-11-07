@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, ChangeEvent } from "react";
 import DatePicker from "react-datepicker";
@@ -17,22 +17,27 @@ const InfletaCalculator: React.FC = () => {
   const [rechargePercentage, setRechargePercentage] = useState<number>(0);
 
   const calculatePresentValue = () => {
+    // Calcular la diferencia de dias entre la fecha actual y la elegida para el primer pago en meses
     const daysToPay: number =
       (firstPaymentDate.getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24) /
       30;
 
-    // Calcular montos mensuales actualizados
+    // Guardar los pagos actualizados en un array
     const updatedPayments: number[] = [];
 
+    // Calcular la tasa de inflación mensual en decimales
     const monthlyInflationRateInDecimals = new Decimal(monthlyInflationRate)
       .div(100)
       .toNumber();
 
+    // Calcular el valor de cada cuota
+    const monthlyInstallmentAmount = installmentPrice / installments;
+
+    // Calcular el valor de cada cuota actualizado a valor de hoy
     for (let i = 0; i < installments; i++) {
       const updatedPayment: number =
-        installmentPrice /
-        installments /
+        monthlyInstallmentAmount /
         Math.pow(1 + monthlyInflationRateInDecimals, i + daysToPay);
       updatedPayments.push(updatedPayment);
     }
@@ -47,6 +52,7 @@ const InfletaCalculator: React.FC = () => {
 
     setPresentValue(totalPresentValue);
 
+    // Calcular el porcentaje de recargo
     const rechargedPercentage: number =
       (installmentPrice / cashPrice) * 100 - 100;
     setRechargePercentage(rechargedPercentage);
