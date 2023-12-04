@@ -83,9 +83,7 @@ const InfletaCalculator: React.FC = () => {
       <input
         placeholder="Ofrece descuento"
         type="checkbox"
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          setIsDiscounted(Boolean(e.target.value))
-        }
+        onClick={() => setIsDiscounted(!isDiscounted)}
       />
       <br />
       {isDiscounted && (
