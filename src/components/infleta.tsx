@@ -15,8 +15,16 @@ const InfletaCalculator: React.FC = () => {
   const [presentValue, setPresentValue] = useState<number>(0);
   const [updatedPayments, setUpdatedPayments] = useState<number[]>([]);
   const [rechargePercentage, setRechargePercentage] = useState<number>(0);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
+  const [isDiscounted, setIsDiscounted] = useState<boolean>(false);
+  const [totalCashPrice, setTotalCashPrice] = useState<number>(0);
 
   const calculatePresentValue = () => {
+    // Aplicar el descuento al cashPrice si hay
+    const discountedPercentage: number = 1 - discountPercentage / 100;
+    const discountedCashPrice: number = cashPrice * discountedPercentage;
+    setTotalCashPrice(discountedCashPrice);
+
     // Calcular la diferencia de dias entre la fecha actual y la elegida para el primer pago en meses
     const daysToPay: number =
       (firstPaymentDate.getTime() - new Date().getTime()) /
@@ -54,7 +62,7 @@ const InfletaCalculator: React.FC = () => {
 
     // Calcular el porcentaje de recargo
     const rechargedPercentage: number =
-      (installmentPrice / cashPrice) * 100 - 100;
+      (installmentPrice / totalCashPrice) * 100 - 100;
     setRechargePercentage(rechargedPercentage);
   };
 
@@ -71,6 +79,30 @@ const InfletaCalculator: React.FC = () => {
         }
       />
       <br />
+      <label>Ofrece descuento al contado?</label>
+      <input
+        placeholder="Ofrece descuento"
+        type="checkbox"
+        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+          setIsDiscounted(Boolean(e.target.value))
+        }
+      />
+      <br />
+      {isDiscounted && (
+        <>
+          <label>Porcentaje de descuento:</label>
+          <input
+            placeholder="Porcentaje de descuento"
+            type="number"
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setDiscountPercentage(Number(e.target.value))
+            }
+            value={discountPercentage}
+          />
+          <br />
+        </>
+      )}
+
       <label>Valor en Cuotas:</label>
       <input
         placeholder="Valor en Cuotas"
@@ -111,7 +143,7 @@ const InfletaCalculator: React.FC = () => {
 
       <div>
         <h2>Resultados:</h2>
-        <h3>{presentValue > cashPrice ? "Contado" : "En Cuotas"} es mejor</h3>
+        <h3>{presentValue > totalCashPrice ? "Contado" : "En Cuotas"} es mejor</h3>
         <p>
           Sumatoria de las cuotas ajustadas a valor de hoy: $
           {presentValue.toFixed(2)}
