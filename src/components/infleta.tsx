@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import { ChangeEvent, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Decimal from "decimal.js";
+import useInstallment from "../lib/hooks/useInstallments";
 
 const InfletaCalculator: React.FC = () => {
   const [cashPrice, setCashPrice] = useState<number>(0);
@@ -12,59 +12,22 @@ const InfletaCalculator: React.FC = () => {
     useState<number>(12.4);
   const [installments, setInstallments] = useState<number>(12);
   const [firstPaymentDate, setFirstPaymentDate] = useState<Date>(new Date());
-  const [presentValue, setPresentValue] = useState<number>(0);
-  const [updatedPayments, setUpdatedPayments] = useState<number[]>([]);
-  const [rechargePercentage, setRechargePercentage] = useState<number>(0);
   const [discountPercentage, setDiscountPercentage] = useState<number>(0);
-  const [isDiscounted, setIsDiscounted] = useState<boolean>(false);
-  const [totalCashPrice, setTotalCashPrice] = useState<number>(0);
 
-  const calculatePresentValue = () => {
-    // Aplicar el descuento al cashPrice si hay
-    const discountedPercentage: number = 1 - discountPercentage / 100;
-    const discountedCashPrice: number = cashPrice * discountedPercentage;
-    setTotalCashPrice(discountedCashPrice);
-
-    // Calcular la diferencia de dias entre la fecha actual y la elegida para el primer pago en meses
-    const daysToPay: number =
-      (firstPaymentDate.getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24) /
-      30;
-
-    // Guardar los pagos actualizados en un array
-    const updatedPayments: number[] = [];
-
-    // Calcular la tasa de inflación mensual en decimales
-    const monthlyInflationRateInDecimals = new Decimal(monthlyInflationRate)
-      .div(100)
-      .toNumber();
-
-    // Calcular el valor de cada cuota
-    const monthlyInstallmentAmount = installmentPrice / installments;
-
-    // Calcular el valor de cada cuota actualizado a valor de hoy
-    for (let i = 0; i < installments; i++) {
-      const updatedPayment: number =
-        monthlyInstallmentAmount /
-        Math.pow(1 + monthlyInflationRateInDecimals, i + daysToPay);
-      updatedPayments.push(updatedPayment);
-    }
-
-    setUpdatedPayments(updatedPayments);
-
-    // Calcular el valor total del VP como la sumatoria de todos los updated payments
-    const totalPresentValue: number = updatedPayments.reduce(
-      (acc, payment) => acc + parseFloat(payment.toFixed(2)),
-      0
-    );
-
-    setPresentValue(totalPresentValue);
-
-    // Calcular el porcentaje de recargo
-    const rechargedPercentage: number =
-      (installmentPrice / totalCashPrice) * 100 - 100;
-    setRechargePercentage(rechargedPercentage);
-  };
+  const {
+    totalCashPrice,
+    updatedPayments,
+    totalPresentValue,
+    rechargePercentage,
+    monthlyInstallmentAmount,
+  } = useInstallment({
+    installmentPrice,
+    installments,
+    monthlyInflationRate,
+    firstPaymentDate,
+    discountPercentage,
+    cashPrice,
+  });
 
   return (
     <div>
@@ -79,27 +42,6 @@ const InfletaCalculator: React.FC = () => {
         }
       />
       <br />
-      <label>Ofrece descuento al contado?</label>
-      <input
-        placeholder="Ofrece descuento"
-        type="checkbox"
-        onClick={() => setIsDiscounted(!isDiscounted)}
-      />
-      <br />
-      {isDiscounted && (
-        <>
-          <label>Porcentaje de descuento:</label>
-          <input
-            placeholder="Porcentaje de descuento"
-            type="number"
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setDiscountPercentage(Number(e.target.value))
-            }
-            value={discountPercentage}
-          />
-          <br />
-        </>
-      )}
 
       <label>Valor en Cuotas:</label>
       <input
@@ -137,23 +79,21 @@ const InfletaCalculator: React.FC = () => {
         onChange={(date: Date) => setFirstPaymentDate(date)}
       />
       <br />
-      <button onClick={calculatePresentValue}>Calcular</button>
 
       <div>
         <h2>Resultados:</h2>
-        <h3>{presentValue > totalCashPrice ? "Contado" : "En Cuotas"} es mejor</h3>
+        <h3>
+          {totalPresentValue > cashPrice ? "Contado" : "En Cuotas"} es mejor
+        </h3>
         <p>
           Sumatoria de las cuotas ajustadas a valor de hoy: $
-          {presentValue.toFixed(2)}
+          {totalPresentValue.toFixed(2)}
         </p>
-        <p>
-          Porcentaje de recargo:{" "}
-          {installmentPrice === 0 || cashPrice === 0 ? 0 : rechargePercentage}%
-        </p>
-        <p>Valor de cada cuota: ${installmentPrice / installments}</p>
+        <p>Porcentaje de recargo: {rechargePercentage.toFixed(2)}%</p>
+        <p>Valor de cada cuota: ${monthlyInstallmentAmount.toFixed(2)}</p>
         <h3>Cuotas ajustadas por la inflación mes a mes</h3>
         <ul>
-          {updatedPayments.map((payment, index) => (
+          {updatedPayments.map((payment: number, index: number) => (
             <li key={index}>
               Cuota #{index + 1}: ${payment.toFixed(2)}
             </li>
