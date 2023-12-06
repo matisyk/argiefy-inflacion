@@ -15,19 +15,33 @@ const InfletaCalculator: React.FC = () => {
   const [discountPercentage, setDiscountPercentage] = useState<number>(0);
 
   const {
-    totalCashPrice,
-    updatedPayments,
-    totalPresentValue,
-    rechargePercentage,
-    monthlyInstallmentAmount,
-  } = useInstallment({
+    calculateDiscountedCashPrice,
+    calculateDaysToPay,
+    calculateUpdatedPayments,
+    calculateTotalPresentValue,
+    calculateRechargePercentage,
+  } = useInstallment();
+
+  const discountedCashPrice = calculateDiscountedCashPrice(
+    installmentPrice,
+    discountPercentage
+  );
+
+  const daysToPay = calculateDaysToPay(firstPaymentDate);
+
+  const updatedPayments = calculateUpdatedPayments({
     installmentPrice,
     installments,
     monthlyInflationRate,
-    firstPaymentDate,
-    discountPercentage,
-    cashPrice,
+    daysToPay,
   });
+
+  const totalPresentValue = calculateTotalPresentValue(updatedPayments);
+
+  const rechargePercentage = calculateRechargePercentage(
+    installmentPrice,
+    cashPrice
+  );
 
   return (
     <div>
@@ -53,6 +67,7 @@ const InfletaCalculator: React.FC = () => {
         }
       />
       <br />
+
       <label>Tasa de Inflación Mensual Estimada (Ejemplo: 12.4%):</label>
       <input
         placeholder="Tasa de Inflación Mensual Estimada"
@@ -63,6 +78,7 @@ const InfletaCalculator: React.FC = () => {
         value={monthlyInflationRate}
       />
       <br />
+
       <label>Cantidad de Cuotas:</label>
       <input
         placeholder="Cantidad de Cuotas"
@@ -73,6 +89,7 @@ const InfletaCalculator: React.FC = () => {
         }
       />
       <br />
+
       <label>Fecha de Pago de la Primera Cuota:</label>
       <DatePicker
         selected={firstPaymentDate}
@@ -90,7 +107,7 @@ const InfletaCalculator: React.FC = () => {
           {totalPresentValue.toFixed(2)}
         </p>
         <p>Porcentaje de recargo: {rechargePercentage.toFixed(2)}%</p>
-        <p>Valor de cada cuota: ${monthlyInstallmentAmount.toFixed(2)}</p>
+        <p>Valor de cada cuota: ${installmentPrice / installments}</p>
         <h3>Cuotas ajustadas por la inflación mes a mes</h3>
         <ul>
           {updatedPayments.map((payment: number, index: number) => (
