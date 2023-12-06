@@ -3,7 +3,7 @@
 import { ChangeEvent, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import useInstallment from "../lib/hooks/useInstallments";
+import useFinancialCalculations from "../lib/hooks/useFinancialCalculations";
 
 const InfletaCalculator: React.FC = () => {
   const [cashPrice, setCashPrice] = useState<number>(0);
@@ -20,7 +20,7 @@ const InfletaCalculator: React.FC = () => {
     calculateUpdatedPayments,
     calculateTotalPresentValue,
     calculateRechargePercentage,
-  } = useInstallment();
+  } = useFinancialCalculations();
 
   const discountedCashPrice = calculateDiscountedCashPrice(
     installmentPrice,

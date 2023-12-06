@@ -9,7 +9,7 @@ type InstallmentParams = {
   cashPrice: number;
 };
 
-const useInstallment = () => {
+const useFinancialCalculations = () => {
   const calculateDiscountedCashPrice = (
     installmentPrice: number,
     discountPercentage: number
@@ -72,4 +72,4 @@ const useInstallment = () => {
   };
 };
 
-export default useInstallment;
+export default useFinancialCalculations;
